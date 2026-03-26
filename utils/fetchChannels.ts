@@ -1,4 +1,5 @@
-import { GetChannelIDs } from './storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GetChannelList, UpdateChannelList } from './storage';
 import { HOLODEX_API_KEY, GG_API_KEY, TWITCH_CLIENT_ID, TWITCH_ACCESS_TOKEN } from '@env';
 
 function updateQueryStringParameters(uri: string, params: Record<string, string>): string {
@@ -46,7 +47,7 @@ export async function getLiveChannels() {
 
 
 export async function getChannelOtherLive() {
-	const channels = await GetChannelIDs();
+	const channels = await GetChannelList();
 	console.log(channels);
 	const gg_url = "https://www.googleapis.com/youtube/v3/search"
 	var items: any[] = [];
@@ -66,9 +67,6 @@ export async function getChannelOtherLive() {
 					'Content-Type': 'application/json',
 				}
 			})
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
 			const json = await response.json();
 			const channelItems = filterData(json);
 			items = [...items, ...channelItems];
@@ -179,9 +177,7 @@ function filterData(json: any): Array<any> {
 			items.push({
 				liveBroadcastContent: item.snippet.liveBroadcastContent,
 				channelTitle: item.snippet.channelTitle,
-				channelThumbnail: item.snippet.thumbnails?.medium?.url
-					|| item.snippet.thumbnails?.default?.url
-					|| '',
+				channelThumbnail: item.snippet.thumbnails.medium.url,
 				VideoId: item.id.videoId,
 				ChannelID: item.snippet.channelId,
 			});
@@ -195,9 +191,7 @@ function filterId(json: any): Array<any> {
 		if (item.snippet) {
 			items.push({
 				channelTitle: item.snippet.channelTitle,
-				channelThumbnail: item.snippet.thumbnails?.medium?.url
-					|| item.snippet.thumbnails?.default?.url
-					|| '',
+				channelThumbnail: item.snippet.thumbnails.medium.url,
 				ChannelIDs: item.snippet.channelId
 			});
 		}
